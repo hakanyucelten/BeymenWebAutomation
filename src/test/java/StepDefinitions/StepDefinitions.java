@@ -13,7 +13,10 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.interactions.Actions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+
 
 
 public class StepDefinitions {
@@ -21,24 +24,32 @@ public class StepDefinitions {
     private WebDriver driver;
 
     private WebDriverWait wait;
+    String excelFilePath = "C:/Users/yucel/IdeaProjects/BeymenWebAutomation/src/test/java/StepDefinitions/beymenExcel.xlsx";
+    String textFilePath = "C:/Users/yucel/IdeaProjects/BeymenWebAutomation/src/test/java/StepDefinitions/infoOutput.txt";
+    ExcelReader excelReader = new ExcelReader(excelFilePath);
+
+    String[] variables = excelReader.readFirstRow();
+
+    String sort = variables[0];
+    String gomlek = variables[1];
+    private static final Logger logger = LogManager.getLogger(StepDefinitions.class);
 
     @Before
     public void setUp() {
-        // Initialize WebDriver (ChromeDriver in this example)
+
         WebDriverManager.chromedriver().setup();
         driver = new ChromeDriver();
         wait = new WebDriverWait(driver, 20); // Maximum wait time of 20 seconds
 
-        //String searchQuery = ExcelReader.readDataFromExcel("src/test/java/StepDefinitions/beymenExcel.xlsx", "Sayfa1", 0, 0);
-        // Optionally, you can maximize the browser window or set other configurations
-        driver.manage().window().maximize();
+         driver.manage().window().maximize();
         driver.get("https://www.beymen.com/");
     }
 
     @Given("user is on the Beymen homepage")
     public void userIsOnGoogleHomepage() {
 
-        // This step is used for navigation and is handled in @Before method
+        logger.info("This is an info message");
+
     }
 
     @When("user searches for sort")
@@ -47,7 +58,7 @@ public class StepDefinitions {
         findheader.click();
         WebElement inputbox = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@id=\"o-searchSuggestion__input\"]")));
 
-        inputbox.sendKeys("sort");
+        inputbox.sendKeys(sort);
         inputbox.sendKeys(Keys.ENTER);
     }
     @And("user clear search button")
@@ -60,7 +71,7 @@ public class StepDefinitions {
     @Then("user searches for gomlek")
     public void userSearchForGomlek(){
         WebElement inputbox = wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@class=\"o-header__search--input\" and @placeholder=\"Ürün, Marka Arayın\"]")));
-        inputbox.sendKeys("gömlek");
+        inputbox.sendKeys(gomlek);
         inputbox.sendKeys(Keys.ENTER);
     }
     @And("user clicks on the cookie button")
@@ -77,14 +88,24 @@ public class StepDefinitions {
 
     @And("choose product and check price")
     public void chooseproduct() {
-        WebElement product = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"productList\"]/div[2]/div/div/div[2]/h3/a[2]")));
+        WebElement product = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@class=\"o-productCard__figure--img lazyload b-loaded\"][1]")));
         product.click();
         WebElement productPrice = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@class='m-price__new' and @id='priceNew']")));
         String productPriceText = productPrice.getText().trim();
         WebElement productInfo = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//span[@class='o-productDetail__description']")));
+
+
+
+        String productInfoText = productInfo.getText().trim();
+        String[] output = new String[2];
+        output[0] = productPriceText;
+        output[1] = productInfoText;
+        FileWriterClass.writeToFile(textFilePath, output);
         WebElement chooseSize = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='sizes']/div/span[2]")));
 
         chooseSize.click();
+
+
         WebElement addtoChart = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@class='m-addBasketFavorite__basket btn' and @id='addBasket']")));
 
         addtoChart.click();
@@ -108,7 +129,7 @@ public class StepDefinitions {
     public void increaseItem() {
         WebElement gotoItem = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@class='m-basket__productInfoCategory']")));
         gotoItem.click();
-        WebElement chooseSize = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='sizes']/div/span[3]")));
+        WebElement chooseSize = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='sizes']/div/span[2]")));
 
         chooseSize.click();
         WebElement addtoChart = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@class='m-addBasketFavorite__basket btn' and @id='addBasket']")));
@@ -117,7 +138,7 @@ public class StepDefinitions {
         WebElement gotoChart = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@class='m-notification__button btn']")));
         gotoChart.click();
         String adet = "2 adet";
-        WebElement ItemPiece = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='quantitySelect0-key-0']/option[2]")));
+        WebElement ItemPiece = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='quantitySelect0-key-0']")));
         ItemPiece.click();
 
         String chartValueText = ItemPiece.getText().trim();
@@ -148,9 +169,9 @@ public class StepDefinitions {
 
     @After
     public void tearDown() {
-        // Close the browser and perform cleanup (runs after each scenario)
-        if (driver != null) {
-            driver.quit();
+
+       if (driver != null) {
+           driver.quit();
         }
     }
 

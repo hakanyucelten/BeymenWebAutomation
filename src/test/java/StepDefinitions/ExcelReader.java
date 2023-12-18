@@ -1,41 +1,43 @@
 package StepDefinitions;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-
-import org.apache.poi.ss.usermodel.*;
 
 public class ExcelReader {
 
-    public static String readDataFromExcel(String filePath, String sheetName, int rowIndex, int columnIndex) {
-        try (Workbook workbook = WorkbookFactory.create(new File(filePath))) {
-            Sheet sheet = workbook.getSheet(sheetName);
+    private String excelFilePath;
 
-            if (sheet != null) {
-                Row row = sheet.getRow(rowIndex);
+    public ExcelReader(String excelFilePath) {
+        this.excelFilePath = excelFilePath;
+    }
 
-                if (row != null) {
-                    Cell cell = row.getCell(columnIndex);
+    public String[] readFirstRow() {
+        String[] variables = new String[2];
 
-                    if (cell != null) {
-                        return cell.getStringCellValue();
-                    } else {
-                        System.out.println("Cell is null at columnIndex: " + columnIndex);
-                    }
-                } else {
-                    System.out.println("Row is null at rowIndex: " + rowIndex);
-                }
-            } else {
-                System.out.println("Sheet is null with name: " + sheetName);
-            }
+        try {
+            FileInputStream fis = new FileInputStream(excelFilePath);
+            XSSFWorkbook workbook = new XSSFWorkbook(fis);
+            Sheet sheet = workbook.getSheetAt(0);
 
-            return null; // or throw an exception based on your requirements
+            // Read the first column (index 0) of the first row into a string variable
+            Cell firstCell = sheet.getRow(0).getCell(0);
+            variables[0] = firstCell.toString();
+
+            // Read the second column (index 1) of the first row into another string variable
+            Cell secondCell = sheet.getRow(0).getCell(1);
+            variables[1] = secondCell.toString();
+
+            workbook.close();
+            fis.close();
+
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
         }
+
+        return variables;
     }
 }
